@@ -192,7 +192,7 @@ class StravaBackup:
         activities = self.client.get_activities()
         athlete = self.client.get_athlete()
 
-        __log__.info("Dumping current gear data...")
+        __log__.info("Downloading current gear data")
         for gear in athlete.bikes + athlete.shoes:
             obj = self.client.get_gear(gear)
             if isinstance(obj, stravalib.model.Bike):
