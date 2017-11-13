@@ -36,7 +36,7 @@ def main():
     config.read_file(args.config)
 
     api_token = config['global']['api_token']
-    output_dir = config['global'].get('output_dir', OUTPUT_DIR)
+    output_dir = os.path.expanduser(config['global'].get('output_dir', OUTPUT_DIR))
     email = config['user']['email']
     password = config['user']['password']
 
