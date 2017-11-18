@@ -90,7 +90,8 @@ class StravaBackup:
     def __init__(self, api_token, email, password, out_dir):
         self.api_token = api_token
         self.out_dir = out_dir
-        self.client = WebClient(access_token=api_token, email=email, password=password)
+        self.client = WebClient(access_token=api_token, email=email,
+                                password=password)
         self._have = self._find_existing_data()
         self._ensure_output_dirs()
 
@@ -196,7 +197,7 @@ class StravaBackup:
         for gear in athlete.bikes + athlete.shoes:
             obj = self.client.get_gear(gear)
             if isinstance(obj, stravalib.model.Bike):
-                obj.components = self.client.get_bike_components(gear)
+                obj.components = self.client.get_bike_components(gear.id)
             with open(self._data_path(obj), 'w') as f:
                 json.dump(obj, f, sort_keys=True, default=obj_to_json)
 
@@ -242,7 +243,7 @@ class StravaBackup:
 
             if not a.manual and not have_data:
                 # Download the original activity from the website
-                data = self.client.get_activity_data(a,
+                data = self.client.get_activity_data(a.id,
                                                      fmt=DataFormat.ORIGINAL,
                                                      json_fmt=DataFormat.GPX)
                 ext = data.filename.rsplit(".", 1)[-1]
