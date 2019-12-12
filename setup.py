@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name="strava-backup",
-      version="0.0.3",
+      version="0.0.4",
       description="Get your data back from Strava",
       url="https://github.com/pR0Ps/strava-backup",
       license="MPLv2",
