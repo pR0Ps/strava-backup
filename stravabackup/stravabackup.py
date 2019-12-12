@@ -87,10 +87,9 @@ def obj_to_json(obj):
 class StravaBackup:
     """Download your data from Strava"""
 
-    def __init__(self, api_token, email, password, out_dir):
-        self.api_token = api_token
+    def __init__(self, access_token, email, password, out_dir):
         self.out_dir = out_dir
-        self.client = WebClient(access_token=api_token, email=email,
+        self.client = WebClient(access_token=access_token, email=email,
                                 password=password)
         self._have = self._find_existing_data()
         self._ensure_output_dirs()
