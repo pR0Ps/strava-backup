@@ -35,6 +35,10 @@ def main():
     parser.add_argument("--limit", nargs="?", type=int, default=None,
                         help="The maximum number of activities to back up in "
                              "a single run (default: %(default)s)")
+    parser.add_argument("--no-gear", action="store_true", default=False,
+                        help="Don't download gear information")
+    parser.add_argument("--no-photos", action="store_true", default=False,
+                        help="Don't download the photos attached to activities")
     parser.add_argument("--quiet", action="store_true", default=False,
                         help="Don't output informational messages "
                              "(default: %(default)s)")
@@ -82,7 +86,7 @@ def main():
 
     __log__.info("Backing up '%s' to '%s'", email, output_dir)
     sb = StravaBackup(access_token, email, password, output_dir)
-    return sb.run_backup(args.limit)
+    return sb.run_backup(limit=args.limit, gear=not args.no_gear, photos=not args.no_photos)
 
 
 if __name__ == "__main__":

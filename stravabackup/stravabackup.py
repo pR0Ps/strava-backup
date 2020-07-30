@@ -179,11 +179,14 @@ class StravaBackup:
         os.makedirs(path, exist_ok=True)
         return os.path.join(path, filename)
 
-    def have_activity(self, activity):
+    def have_activity(self, activity, photos=True):
         """Check if we have an activity (and all it's photos)"""
         h = self._have[activity.id]
         if not h[0] or not h[1]:
             return False
+
+        if not photos:
+            return True
 
         complete_photos = [k for k, v in h[2].items() if all(v)]
         return len(complete_photos) >= activity.total_photo_count
@@ -195,8 +198,7 @@ class StravaBackup:
         except stravalib.exc.AccessUnauthorized:
             __log__.error("Failed to list activities (missing activity:read scope?). Skipping.")
 
-    def run_backup(self, limit=None):
-
+    def backup_gear(self):
         athlete = self.client.get_athlete()
         if athlete.bikes is None and athlete.shoes is None:
             __log__.error("Failed to download gear data (missing profile:read_all scope?). Skipping.")
@@ -209,41 +211,48 @@ class StravaBackup:
                 with open(self._data_path(obj), 'w') as f:
                     json.dump(obj, f, sort_keys=True, default=obj_to_json)
 
+    def backup_photos(self, activity_id, photo_data):
+        for p in self.client.get_activity_photos(activity_id,
+                                                 only_instagram=False,
+                                                 size=5000):
+            # unique_id for Strava, id for Instagram
+            photo_id = p.unique_id or p.id
+
+            if not photo_data[photo_id][0]:
+                with open(self._data_path(p), 'w') as f:
+                    json.dump(p, f, sort_keys=True, default=obj_to_json)
+
+            if not photo_data[photo_id][1]:
+                url = photo_url(p)
+                if not url:
+                    continue
+
+                __log__.info("Downloading photo")
+                resp = requests.get(url, stream=True)
+                # TODO: Check for filetype instead of assuming jpg
+                with open(self._data_path(p, ext="jpg"), 'wb') as f:
+                    for chunk in resp.iter_content(chunk_size=16384):
+                        if chunk:
+                            f.write(chunk)
+
+
+    def backup_activities(self, limit=None, photos=True):
         count = 0
         for a in self._activities():
 
             if limit is not None and count >= limit:
                 return 0
 
-            if self.have_activity(a):
+            if self.have_activity(a, photos=photos):
                 continue
 
             count += 1
+            # Get the fully-detailed activity
             a = self.client.get_activity(a.id)
 
-            have_meta, have_data, photos = self._have[a.id]
-            for p in self.client.get_activity_photos(a.id,
-                                                     only_instagram=False,
-                                                     size=5000):
-                # unique_id for Strava, id for Instagram
-                photo_id = p.unique_id or p.id
-
-                if not photos[photo_id][0]:
-                    with open(self._data_path(p), 'w') as f:
-                        json.dump(p, f, sort_keys=True, default=obj_to_json)
-
-                if not photos[photo_id][1]:
-                    url = photo_url(p)
-                    if not url:
-                        continue
-
-                    __log__.info("Downloading photo")
-                    resp = requests.get(url, stream=True)
-                    # TODO: Check for filetype instead of assuming jpg
-                    with open(self._data_path(p, ext="jpg"), 'wb') as f:
-                        for chunk in resp.iter_content(chunk_size=16384):
-                            if chunk:
-                                f.write(chunk)
+            have_meta, have_data, photo_data = self._have[a.id]
+            if photos:
+                self.backup_photos(a.id, photo_data)
 
             if not have_meta:
                 with open(self._data_path(a), 'w') as f:
@@ -262,3 +271,10 @@ class StravaBackup:
                         if chunk:
                             f.write(chunk)
         return 0
+
+    def run_backup(self, limit=None, gear=True, photos=True):
+
+        if gear:
+            self.backup_gear()
+
+        return self.backup_activities(limit=limit, photos=photos)
