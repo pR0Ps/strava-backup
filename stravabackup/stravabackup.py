@@ -89,6 +89,8 @@ class StravaBackup:
 
     def __init__(self, access_token, email, password, out_dir):
         self.out_dir = out_dir
+
+        # Will attempt to log in using the username/password
         self.client = WebClient(access_token=access_token, email=email,
                                 password=password)
         self._have = self._find_existing_data()
@@ -186,22 +188,29 @@ class StravaBackup:
         complete_photos = [k for k, v in h[2].items() if all(v)]
         return len(complete_photos) >= activity.total_photo_count
 
+    def _activities(self):
+        i = self.client.get_activities()
+        try:
+            yield from i
+        except stravalib.exc.AccessUnauthorized:
+            __log__.error("Failed to list activities (missing activity:read scope?). Skipping.")
+
     def run_backup(self, limit=None):
 
-        # log in using the API and the web
-        activities = self.client.get_activities()
         athlete = self.client.get_athlete()
-
-        __log__.info("Downloading current gear data")
-        for gear in athlete.bikes + athlete.shoes:
-            obj = self.client.get_gear(gear)
-            if isinstance(obj, stravalib.model.Bike):
-                obj.components = self.client.get_bike_components(gear.id)
-            with open(self._data_path(obj), 'w') as f:
-                json.dump(obj, f, sort_keys=True, default=obj_to_json)
+        if athlete.bikes is None and athlete.shoes is None:
+            __log__.error("Failed to download gear data (missing profile:read_all scope?). Skipping.")
+        else:
+            __log__.info("Downloading current gear data")
+            for gear in athlete.bikes + athlete.shoes:
+                obj = self.client.get_gear(gear)
+                if isinstance(obj, stravalib.model.Bike):
+                    obj.components = self.client.get_bike_components(gear.id)
+                with open(self._data_path(obj), 'w') as f:
+                    json.dump(obj, f, sort_keys=True, default=obj_to_json)
 
         count = 0
-        for a in activities:
+        for a in self._activities():
 
             if limit is not None and count >= limit:
                 return 0

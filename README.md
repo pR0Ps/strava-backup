@@ -5,8 +5,8 @@ Get your data back from Strava.
 Strava has an export options, but it will only give you the GPX files that Strava produces after
 analyzing your uploads.
 
-Thankfully, there is a hidden option to download the original file for individual activities. However,
-this is only available on the website and not via the API.
+Thankfully, there is a hidden option to download the original file for individual activities.
+However, this is only available on the website and not via the API.
 
 This tool uses the API to get a list of all your events, then web scraping to log into the site
 using your username and password and download the original files for all your activities.
@@ -17,8 +17,9 @@ or `*.json` (Strava mobile application).
 The tool will also output a `*.meta.json` file for every activity that includes more information on
 the activity (name, description, type, distance, equipment, etc).
 
-Additionally, the tool will dump all your 'Gear' information, as well as any photos that have been
-added to activities.
+Additionally, the tool will backup your shoes and bikes information, as well as any photos that have
+been added to activities.
+
 
 Authentication
 --------------
@@ -28,11 +29,13 @@ which it can generate access tokens. For more information see the [Strava API au
 documentation](https://developers.strava.com/docs/authentication/).
 
 A "refresh token" can be generated using a separate program such as
-[strava-tokengen](https://github.com/pR0Ps/strava-tokengen). In order to back up your data,
-`strava-backup` requires the following scopes to be enabled for the refresh token:
-- `profile:read_all`: To read and backup gear data
-- `activity:read`: To read and backup activity data
-- `activity:read_all`: To read and backup private activity data
+[strava-tokengen](https://github.com/pR0Ps/strava-tokengen).
+
+In order to back up your data, `strava-backup` can use the following scopes (all optional):
+- `profile:read_all` ("View your complete Strava profile"): Will read and backup gear data
+- `activity:read` ("View data about your activities"): Will read and backup activity data
+- `activity:read_all` ("View data about your private activities"): Will read and backup private activity data
+
 
 Setup
 -----
@@ -45,6 +48,7 @@ pip install strava-backup
 
 A sample has been included in this package. Copy the sample to the correct spot and fill in the
 required information.
+
 
 Running
 -------
