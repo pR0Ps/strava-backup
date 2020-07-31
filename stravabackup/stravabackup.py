@@ -198,18 +198,33 @@ class StravaBackup:
         except stravalib.exc.AccessUnauthorized:
             __log__.error("Failed to list activities (missing activity:read scope?). Skipping.")
 
-    def backup_gear(self):
+    def backup_gear(self, dry_run=False):
         athlete = self.client.get_athlete()
         if athlete.bikes is None and athlete.shoes is None:
-            __log__.error("Failed to download gear data (missing profile:read_all scope?). Skipping.")
-        else:
-            __log__.info("Downloading current gear data")
-            for gear in athlete.bikes + athlete.shoes:
-                obj = self.client.get_gear(gear)
-                if isinstance(obj, stravalib.model.Bike):
-                    obj.components = self.client.get_bike_components(gear.id)
-                with open(self._data_path(obj), 'w') as f:
-                    json.dump(obj, f, sort_keys=True, default=obj_to_json)
+            __log__.error("Failed to get gear data (missing profile:read_all scope?). Skipping.")
+            return
+
+        bikes = athlete.bikes or []
+        shoes = athlete.shoes or []
+
+        if dry_run:
+            __log__.info(
+                "Would download current gear data from %d bike(s) and %d shoe(s)",
+                len(bikes), len(shoes)
+            )
+            return
+
+        __log__.info(
+            "Downloading current gear data (%d bike(s) and %d shoe(s))",
+            len(bikes), len(shoes)
+        )
+
+        for gear in bikes + shoes:
+            obj = self.client.get_gear(gear)
+            if isinstance(obj, stravalib.model.Bike):
+                obj.components = self.client.get_bike_components(gear.id)
+            with open(self._data_path(obj), 'w') as f:
+                json.dump(obj, f, sort_keys=True, default=obj_to_json)
 
     def backup_photos(self, activity_id, photo_data):
         for p in self.client.get_activity_photos(activity_id,
@@ -227,7 +242,7 @@ class StravaBackup:
                 if not url:
                     continue
 
-                __log__.info("Downloading photo")
+                __log__.info("Downloading photo %s", photo_id)
                 resp = requests.get(url, stream=True)
                 # TODO: Check for filetype instead of assuming jpg
                 with open(self._data_path(p, ext="jpg"), 'wb') as f:
@@ -235,8 +250,7 @@ class StravaBackup:
                         if chunk:
                             f.write(chunk)
 
-
-    def backup_activities(self, limit=None, photos=True):
+    def backup_activities(self, *, limit=None, photos=True, dry_run=False):
         count = 0
         for a in self._activities():
 
@@ -247,11 +261,25 @@ class StravaBackup:
                 continue
 
             count += 1
+
+            have_meta, have_data, photo_data = self._have[a.id]
+
+            if dry_run:
+                if not a.manual and not have_data:
+                    __log__.info("Would download activity %s", a)
+                elif not have_meta:
+                    __log__.info("Would download metadata for activity %s", a)
+
+                if photos and a.total_photo_count:
+                    __log__.info("Would download %d photo(s) from activity %s", a.total_photo_count, a)
+
+                continue
+
             # Get the fully-detailed activity
             a = self.client.get_activity(a.id)
 
-            have_meta, have_data, photo_data = self._have[a.id]
-            if photos:
+            if photos and a.total_photo_count:
+                __log__.info("Downloading %d photo(s) from activity %s", a.total_photo_count, a)
                 self.backup_photos(a.id, photo_data)
 
             if not have_meta:
@@ -272,9 +300,9 @@ class StravaBackup:
                             f.write(chunk)
         return 0
 
-    def run_backup(self, limit=None, gear=True, photos=True):
+    def run_backup(self, *, limit=None, gear=True, photos=True, dry_run=False):
 
         if gear:
-            self.backup_gear()
+            self.backup_gear(dry_run=dry_run)
 
-        return self.backup_activities(limit=limit, photos=photos)
+        return self.backup_activities(limit=limit, photos=photos, dry_run=dry_run)

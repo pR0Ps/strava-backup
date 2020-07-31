@@ -39,6 +39,8 @@ def main():
                         help="Don't download gear information")
     parser.add_argument("--no-photos", action="store_true", default=False,
                         help="Don't download the photos attached to activities")
+    parser.add_argument("--dry-run", action="store_true", default=False,
+                        help="Only list what would be downloaded")
     parser.add_argument("--quiet", action="store_true", default=False,
                         help="Don't output informational messages "
                              "(default: %(default)s)")
@@ -86,7 +88,10 @@ def main():
 
     __log__.info("Backing up '%s' to '%s'", email, output_dir)
     sb = StravaBackup(access_token, email, password, output_dir)
-    return sb.run_backup(limit=args.limit, gear=not args.no_gear, photos=not args.no_photos)
+    return sb.run_backup(
+        limit=args.limit, gear=not args.no_gear, photos=not args.no_photos,
+        dry_run=args.dry_run
+    )
 
 
 if __name__ == "__main__":
