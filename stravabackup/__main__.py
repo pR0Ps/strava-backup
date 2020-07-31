@@ -86,7 +86,11 @@ def main():
 
     access_token = tokens['access_token']
 
-    __log__.info("Backing up '%s' to '%s'", email, output_dir)
+    if args.dry_run:
+        __log__.info("Would backup '%s' to '%s'", email, output_dir)
+    else:
+        __log__.info("Backing up '%s' to '%s'", email, output_dir)
+
     sb = StravaBackup(access_token, email, password, output_dir)
     return sb.run_backup(
         limit=args.limit, gear=not args.no_gear, photos=not args.no_photos,
