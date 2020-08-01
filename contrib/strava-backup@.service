@@ -1,0 +1,6 @@
+[Unit]
+Description=Run strava-backup for user %i
+
+[Service]
+User=%i
+ExecStart=/usr/local/bin/strava-backup --quiet

@@ -44,9 +44,11 @@ Use `pip` to install this package:
 pip install strava-backup
 ```
 
-`strava-backup` expects to find a config file at `~/.config/strava-backup.conf` by default.
+By default, `strava-backup` will look for a config file called `strava-backup.conf` in
+`$XDG_CONFIG_HOME/`, falling back to `~/.config/` if it's unset. An alternate file can be specified
+using the `--config` option.
 
-A sample has been included in this package. Copy the sample to the correct spot and fill in the
+A sample config file has been included in this package. Copy it to the correct spot and fill in the
 required information.
 
 
@@ -55,6 +57,6 @@ Running
 `strava-backup` is an incremental backup. It tracks what has already been downloaded by looking at
 the output directory and doesn't download it again.
 
-To download all new information, simply run `strava-backup`. See `strava-backup --help` for other
-options. To automatically download new information on an ongoing basis, add the `strava-backup` call
-to a cronjob.
+To download all new data, simply run `strava-backup`. See `strava-backup --help` for other options.
+To backup data on an ongoing basis, configure your system to call `strava-backup` periodically (see
+the [/contrib](contrib/) folder for examples).

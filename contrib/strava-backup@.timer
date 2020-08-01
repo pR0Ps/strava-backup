@@ -1,0 +1,13 @@
+[Unit]
+Description=Run strava-backup for %i every week
+
+[Timer]
+# Start anywhere from 00:00 - 04:00 every Monday
+OnCalendar=Mon *-*-* 00:00:00
+RandomizedDelaySec=14400
+
+# If missed, wait until the next scheduled time to run again
+Persistent=false
+
+[Install]
+WantedBy=timers.target
