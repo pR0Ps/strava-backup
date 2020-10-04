@@ -99,7 +99,6 @@ class StravaBackup:
         self.client = WebClient(access_token=access_token, email=email,
                                 password=password)
         self._have = self._find_existing_data()
-        self._ensure_output_dirs()
 
     def __enter__(self):
         return self
@@ -119,10 +118,12 @@ class StravaBackup:
     def gear_dir(self):
         return os.path.join(self.out_dir, "gear")
 
-    def _ensure_output_dirs(self):
+    def _ensure_output_dirs(self, gear=True, photos=True):
         os.makedirs(self.activity_dir, exist_ok=True)
-        os.makedirs(self.photo_dir, exist_ok=True)
-        os.makedirs(self.gear_dir, exist_ok=True)
+        if photos:
+            os.makedirs(self.photo_dir, exist_ok=True)
+        if gear:
+            os.makedirs(self.gear_dir, exist_ok=True)
 
     def _find_existing_data(self):
         """Look through the output dir for existing files"""
@@ -306,6 +307,9 @@ class StravaBackup:
                             f.write(chunk)
 
     def run_backup(self, *, limit=None, gear=True, photos=True, dry_run=False):
+
+        if not dry_run:
+            self._ensure_output_dirs(gear=gear, photos=photos)
 
         if gear:
             self.backup_gear(dry_run=dry_run)
