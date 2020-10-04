@@ -182,7 +182,8 @@ class StravaBackup:
     def have_activity(self, activity, photos=True):
         """Check if we have an activity (and all it's photos)"""
         h = self._have[activity.id]
-        if not h[0] or not h[1]:
+
+        if not h[0] or (not h[1] and not activity.manual):
             return False
 
         if not photos:
@@ -255,7 +256,7 @@ class StravaBackup:
         for a in self._activities():
 
             if limit is not None and count >= limit:
-                return 0
+                return
 
             if self.have_activity(a, photos=photos):
                 continue
@@ -298,11 +299,10 @@ class StravaBackup:
                     for chunk in data.content:
                         if chunk:
                             f.write(chunk)
-        return 0
 
     def run_backup(self, *, limit=None, gear=True, photos=True, dry_run=False):
 
         if gear:
             self.backup_gear(dry_run=dry_run)
 
-        return self.backup_activities(limit=limit, photos=photos, dry_run=dry_run)
+        self.backup_activities(limit=limit, photos=photos, dry_run=dry_run)
