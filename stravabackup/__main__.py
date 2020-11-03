@@ -44,6 +44,8 @@ def main():
     parser.add_argument("--quiet", action="store_true", default=False,
                         help="Don't output informational messages "
                              "(default: %(default)s)")
+    parser.add_argument("--debug", action="store_true", default=False,
+                        help="Output debug information (default: %(default)s)")
     args = parser.parse_args()
 
     config_data = args.config.read()
@@ -57,9 +59,13 @@ def main():
     email = config['user']['email']
     password = config['user']['password']
 
-    logging.getLogger("stravalib").setLevel(logging.ERROR)
+    # Reduce logspam
+    logging.getLogger("stravalib.model").setLevel(logging.INFO)
+    logging.getLogger("stravalib.attributes").setLevel(logging.ERROR)
+    logging.getLogger("stravaweblib.model").setLevel(logging.INFO)
     logging.basicConfig(format=LOG_FORMAT,
-                        level=logging.ERROR if args.quiet else logging.INFO)
+                        level=logging.DEBUG if args.debug else
+                              logging.ERROR if args.quiet else logging.INFO)
 
     __log__.info("Using the refresh token to get an access token")
     tokens = Client().refresh_access_token(client_id, client_secret, refresh_token)
