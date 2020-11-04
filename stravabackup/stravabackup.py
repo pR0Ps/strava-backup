@@ -84,6 +84,11 @@ def obj_to_json(obj):
     raise ValueError("Can't serialize object: {!r}".format(obj))
 
 
+def json_dump(*args, **kwargs):
+    """Custom JSON dump that knows how to handle all the required formats"""
+    json.dump(*args, sort_keys=True, ensure_ascii=False, default=obj_to_json, **kwargs)
+
+
 class StravaBackup:
     """Download your data from Strava"""
 
@@ -225,7 +230,7 @@ class StravaBackup:
             if isinstance(obj, stravalib.model.Bike):
                 obj.components = self.client.get_bike_components(gear.id)
             with open(self._data_path(obj), 'w') as f:
-                json.dump(obj, f, sort_keys=True, default=obj_to_json)
+                json_dump(obj, f)
 
     def backup_photos(self, activity_id, photo_data):
         for p in self.client.get_activity_photos(activity_id,
@@ -236,7 +241,7 @@ class StravaBackup:
 
             if not photo_data[photo_id][0]:
                 with open(self._data_path(p), 'w') as f:
-                    json.dump(p, f, sort_keys=True, default=obj_to_json)
+                    json_dump(p, f)
 
             if not photo_data[photo_id][1]:
                 url = photo_url(p)
@@ -285,7 +290,7 @@ class StravaBackup:
 
             if not have_meta:
                 with open(self._data_path(a), 'w') as f:
-                    json.dump(a, f, sort_keys=True, default=obj_to_json)
+                    json_dump(a, f)
 
             if not a.manual and not have_data:
                 # Download the original activity from the website
