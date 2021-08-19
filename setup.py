@@ -15,6 +15,6 @@ setup(name="strava-backup",
       ],
       packages=["stravabackup"],
       package_data={"stravabackup": ["strava-backup.conf"]},
-      install_requires=["stravaweblib>=0.0.4,<1.0.0", "stravalib>=0.10.2,<1.0.0"],
+      install_requires=["stravaweblib>=0.0.4,<1.0.0", "stravalib>=0.10.4,<1.0.0"],
       entry_points={'console_scripts': ["strava-backup=stravabackup.__main__:main"]}
 )
