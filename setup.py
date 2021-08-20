@@ -14,7 +14,7 @@ except Exception:
 
 setup(
     name="strava-backup",
-    version="0.2.0",
+    version="0.2.1",
     description="Get your data back from Strava",
     long_description=long_description,
     long_description_content_type="text/markdown",
