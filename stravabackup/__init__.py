@@ -257,9 +257,7 @@ class StravaBackup:
                 resp = requests.get(url, stream=True)
                 # TODO: Check for filetype instead of assuming jpg
                 with open(self._data_path(p, ext="jpg"), 'wb') as f:
-                    for chunk in resp.iter_content(chunk_size=16384):
-                        if chunk:
-                            f.write(chunk)
+                    f.writelines(resp.iter_content(chunk_size=16384))
 
     def backup_activities(self, *, limit=None, metadata=True, photos=True, dry_run=False):
         count = 0
@@ -310,9 +308,7 @@ class StravaBackup:
 
                 __log__.info("Downloading activity %s (%s)", a, data.filename)
                 with open(self._data_path(a, ext=ext), 'wb') as f:
-                    for chunk in data.content:
-                        if chunk:
-                            f.write(chunk)
+                    f.writelines(data.content)
 
     def run_backup(self, *, limit=None, metadata=True, gear=True, photos=True, dry_run=False):
 
