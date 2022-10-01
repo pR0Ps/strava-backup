@@ -186,11 +186,14 @@ class StravaBackup:
         os.makedirs(path, exist_ok=True)
         return os.path.join(path, filename)
 
-    def have_activity(self, activity, photos=True):
+    def have_activity(self, activity, photos=True, metadata=True):
         """Check if we have an activity (and all it's photos)"""
         h = self._have[activity.id]
 
-        if not h[0] or (not h[1] and not activity.manual):
+        if metadata and not h[0]:
+            return False
+
+        if not h[1] and not activity.manual:
             return False
 
         if not photos:
@@ -254,18 +257,16 @@ class StravaBackup:
                 resp = requests.get(url, stream=True)
                 # TODO: Check for filetype instead of assuming jpg
                 with open(self._data_path(p, ext="jpg"), 'wb') as f:
-                    for chunk in resp.iter_content(chunk_size=16384):
-                        if chunk:
-                            f.write(chunk)
+                    f.writelines(resp.iter_content(chunk_size=16384))
 
-    def backup_activities(self, *, limit=None, photos=True, dry_run=False):
+    def backup_activities(self, *, limit=None, metadata=True, photos=True, dry_run=False):
         count = 0
         for a in self._activities():
 
             if limit is not None and count >= limit:
                 return
 
-            if self.have_activity(a, photos=photos):
+            if self.have_activity(a, photos=photos, metadata=metadata):
                 continue
 
             count += 1
@@ -275,7 +276,7 @@ class StravaBackup:
             if dry_run:
                 if not a.manual and not have_data:
                     __log__.info("Would download activity %s", a)
-                elif not have_meta:
+                elif metadata and not have_meta:
                     __log__.info("Would download metadata for activity %s", a)
 
                 if photos and a.total_photo_count:
@@ -283,14 +284,18 @@ class StravaBackup:
 
                 continue
 
-            # Get the fully-detailed activity
-            a = self.client.get_activity(a.id)
+            need_photos = photos and a.total_photo_count
+            need_metadata =  metadata and not have_meta
 
-            if photos and a.total_photo_count:
+            # Get the fully-detailed activity for photos and metadata
+            if need_photos or need_metadata:
+                a = self.client.get_activity(a.id)
+
+            if need_photos:
                 __log__.info("Downloading %d photo(s) from activity %s", a.total_photo_count, a)
                 self.backup_photos(a.id, photo_data)
 
-            if not have_meta:
+            if need_metadata:
                 with open(self._data_path(a), 'w') as f:
                     json_dump(a, f)
 
@@ -303,11 +308,9 @@ class StravaBackup:
 
                 __log__.info("Downloading activity %s (%s)", a, data.filename)
                 with open(self._data_path(a, ext=ext), 'wb') as f:
-                    for chunk in data.content:
-                        if chunk:
-                            f.write(chunk)
+                    f.writelines(data.content)
 
-    def run_backup(self, *, limit=None, gear=True, photos=True, dry_run=False):
+    def run_backup(self, *, limit=None, metadata=True, gear=True, photos=True, dry_run=False):
 
         if not dry_run:
             self._ensure_output_dirs(gear=gear, photos=photos)
@@ -315,4 +318,4 @@ class StravaBackup:
         if gear:
             self.backup_gear(dry_run=dry_run)
 
-        self.backup_activities(limit=limit, photos=photos, dry_run=dry_run)
+        self.backup_activities(limit=limit, metadata=metadata, photos=photos, dry_run=dry_run)

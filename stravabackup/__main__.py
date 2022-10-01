@@ -14,7 +14,7 @@ from stravalib import Client
 __log__ = logging.getLogger(__name__)
 
 
-LOG_FORMAT = "%(asctime)s : [%(levelname)8s] %(message)s"
+LOG_FORMAT = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
 CONFIG_FILE = os.path.join(
     os.environ.get('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '.config')),
     'strava-backup.conf'
@@ -35,6 +35,8 @@ def main():
     parser.add_argument("--limit", nargs="?", type=int, default=None,
                         help="The maximum number of activities to back up in "
                              "a single run (default: %(default)s)")
+    parser.add_argument("--no-meta", action="store_true", default=False,
+                        help="Don't download activity metadata")
     parser.add_argument("--no-gear", action="store_true", default=False,
                         help="Don't download gear information")
     parser.add_argument("--no-photos", action="store_true", default=False,
@@ -99,7 +101,10 @@ def main():
 
     sb = StravaBackup(access_token, email, password, output_dir)
     return sb.run_backup(
-        limit=args.limit, gear=not args.no_gear, photos=not args.no_photos,
+        limit=args.limit,
+        metadata=not args.no_meta,
+        gear=not args.no_gear,
+        photos=not args.no_photos,
         dry_run=args.dry_run
     )
 
