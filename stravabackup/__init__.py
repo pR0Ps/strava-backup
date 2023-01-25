@@ -186,6 +186,12 @@ class StravaBackup:
         os.makedirs(path, exist_ok=True)
         return os.path.join(path, filename)
 
+    def _save_metadata(self, obj):
+        """Write the objects's metadata into the correct file"""
+        path = self._data_path(obj)
+        with open(path, "wt", encoding="utf8") as fp:
+            json_dump(obj, fp)
+
     def have_activity(self, activity, photos=True, metadata=True):
         """Check if we have an activity (and all it's photos)"""
         h = self._have[activity.id]
@@ -234,8 +240,7 @@ class StravaBackup:
             obj = self.client.get_gear(gear)
             if isinstance(obj, stravalib.model.Bike):
                 obj.components = self.client.get_bike_components(gear.id)
-            with open(self._data_path(obj), 'w') as f:
-                json_dump(obj, f)
+            self._save_metadata(obj)
 
     def backup_photos(self, activity_id, photo_data):
         for p in self.client.get_activity_photos(activity_id,
@@ -245,8 +250,7 @@ class StravaBackup:
             photo_id = p.unique_id or p.id
 
             if not photo_data[photo_id][0]:
-                with open(self._data_path(p), 'w') as f:
-                    json_dump(p, f)
+                self._save_metadata(p)
 
             if not photo_data[photo_id][1]:
                 url = photo_url(p)
@@ -256,7 +260,7 @@ class StravaBackup:
                 __log__.info("Downloading photo %s", photo_id)
                 resp = requests.get(url, stream=True)
                 # TODO: Check for filetype instead of assuming jpg
-                with open(self._data_path(p, ext="jpg"), 'wb') as f:
+                with open(self._data_path(p, ext="jpg"), "wb") as f:
                     f.writelines(resp.iter_content(chunk_size=16384))
 
     def backup_activities(self, *, limit=None, metadata=True, photos=True, dry_run=False):
@@ -296,8 +300,7 @@ class StravaBackup:
                 self.backup_photos(a.id, photo_data)
 
             if need_metadata:
-                with open(self._data_path(a), 'w') as f:
-                    json_dump(a, f)
+                self._save_metadata(a)
 
             if not a.manual and not have_data:
                 # Download the original activity from the website
@@ -307,7 +310,7 @@ class StravaBackup:
                 ext = data.filename.rsplit(".", 1)[-1]
 
                 __log__.info("Downloading activity %s (%s)", a, data.filename)
-                with open(self._data_path(a, ext=ext), 'wb') as f:
+                with open(self._data_path(a, ext=ext), "wb") as f:
                     f.writelines(data.content)
 
     def run_backup(self, *, limit=None, metadata=True, gear=True, photos=True, dry_run=False):
