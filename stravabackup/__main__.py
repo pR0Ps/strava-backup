@@ -15,12 +15,13 @@ __log__ = logging.getLogger(__name__)
 
 
 LOG_FORMAT = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+HOME = os.path.expanduser("~")
 CONFIG_FILE = os.path.join(
-    os.environ.get('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '.config')),
+    os.environ.get('XDG_CONFIG_HOME', os.path.join(HOME, '.config')),
     'strava-backup.conf'
 )
 OUTPUT_DIR = os.path.join(
-    os.environ.get('XDG_DATA_HOME', os.path.join(os.environ['HOME'], ".local", "share")),
+    os.environ.get('XDG_DATA_HOME', os.path.join(HOME, ".local", "share")),
     "strava-backup"
 )
 
