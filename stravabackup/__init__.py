@@ -26,8 +26,8 @@ META_EXTENSION = "meta.json"
 ACTIVITY_FILENAME = "{start}_{id}.{ext}"
 GEAR_FILENAME = "{id}.{ext}"
 PHOTO_FILENAME = "{activity_id}_{photo_id}.{ext}"
-ACTIVITY_REGEX = re.compile("[\dTZ-]*_(\d*)\..*")
-PHOTO_REGEX = re.compile("(\d*)_([\w-]*)\..*")
+ACTIVITY_REGEX = re.compile(r"[\dTZ-]*_(\d*)\..*")
+PHOTO_REGEX = re.compile(r"(\d*)_([\w-]*)\..*")
 
 PHOTO_SOURCES = {1: "Strava", 2: "Instagram"}
 
