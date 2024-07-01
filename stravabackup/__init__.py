@@ -42,11 +42,8 @@ def valid_unit(unit):
         if len(numer) == len(denom) == 1:
             return valid_unit(numer) and valid_unit(denom)
     elif isinstance(unit, list):
-        # Allow e.g. m/s as a unit.
-        for i in unit:
-            if not valid_unit(i):
-                return False
-        return True
+        # units can be a list of units (ex: m/s)
+        return all(valid_unit(x) for x in unit)
     return False
 
 
