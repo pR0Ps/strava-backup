@@ -41,6 +41,9 @@ def valid_unit(unit):
         denom = unit.denom
         if len(numer) == len(denom) == 1:
             return valid_unit(numer) and valid_unit(denom)
+    elif isinstance(unit, list):
+        # units can be a list of units (ex: m/s)
+        return all(valid_unit(x) for x in unit)
     return False
 
 
@@ -65,7 +68,8 @@ def obj_to_json(obj):
                                              "distance", "start_date",
                                              "moving_time", "elapsed_time",
                                              "calories", "device_name",
-                                             "gear_id")}
+                                             "gear_id", "total_elevation_gain",
+                                             "average_speed", "max_speed")}
     elif isinstance(obj, stravalib.model.Gear):
         d = {p: getattr(obj, p) for p in ('id', 'name', 'brand_name',
                                           'model_name', 'description')}
