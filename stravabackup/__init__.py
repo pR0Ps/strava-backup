@@ -97,12 +97,16 @@ def json_dump(*args, **kwargs):
 class StravaBackup:
     """Download your data from Strava"""
 
-    def __init__(self, access_token, email, password, out_dir):
+    def __init__(self, access_token, email, password, jwt, out_dir):
         self.out_dir = out_dir
 
         # Will attempt to log in using the username/password
-        self.client = WebClient(access_token=access_token, email=email,
-                                password=password)
+        if jwt:
+            self.client = WebClient(access_token=access_token, email=email,
+                                    jwt=jwt)
+        else:
+            self.client = WebClient(access_token=access_token, email=email,
+                                    password=password)
         self._have = self._find_existing_data()
 
     def __enter__(self):

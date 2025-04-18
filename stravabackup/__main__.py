@@ -60,7 +60,12 @@ def main():
     refresh_token = config['api']['refresh_token']
     output_dir = os.path.expanduser(config['global'].get('output_dir', OUTPUT_DIR))
     email = config['user']['email']
-    password = config['user']['password']
+    if 'jwt' in config['user']:
+        jwt = config['user']['jwt']
+        password = None
+    else:
+        jwt = None
+        password = config['user']['password']
 
     # Reduce logspam
     logging.getLogger("stravalib.model").setLevel(logging.INFO)
@@ -100,7 +105,7 @@ def main():
     else:
         __log__.info("Backing up '%s' to '%s'", email, output_dir)
 
-    sb = StravaBackup(access_token, email, password, output_dir)
+    sb = StravaBackup(access_token, email, password, jwt, output_dir)
     return sb.run_backup(
         limit=args.limit,
         metadata=not args.no_meta,

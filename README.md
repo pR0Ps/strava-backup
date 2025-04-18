@@ -11,6 +11,9 @@ However, this is only available on the website and not via the API.
 This tool uses the API to get a list of all your events, then web scraping to log into the site
 using your username and password and download the original files for all your activities.
 
+It's possible to give your username and your JWT token instead of your password: that token is only
+valid for 30 days, but it can work in cases where your password alone is not accepted.
+
 The "original file" will usually be either a `*.fit` file (most Garmin devices), `*.tcx`, `*.gpx`,
 or `*.json` (Strava mobile application).
 
