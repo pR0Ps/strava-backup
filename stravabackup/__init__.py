@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import base64
 from collections import defaultdict
 import datetime
 import json
@@ -97,12 +98,16 @@ def json_dump(*args, **kwargs):
 class StravaBackup:
     """Download your data from Strava"""
 
-    def __init__(self, access_token, email, password, out_dir):
+    def __init__(self, *, access_token, email, password, jwt, out_dir):
         self.out_dir = out_dir
 
-        # Will attempt to log in using the username/password
-        self.client = WebClient(access_token=access_token, email=email,
-                                password=password)
+        # Will attempt to log in using the username/password/jwt
+        self.client = WebClient(
+            access_token=access_token,
+            email=email,
+            password=password,
+            jwt=self._validate_jwt(jwt),
+        )
         self._have = self._find_existing_data()
 
     def __enter__(self):
@@ -122,6 +127,38 @@ class StravaBackup:
     @property
     def gear_dir(self):
         return os.path.join(self.out_dir, "gear")
+
+    @staticmethod
+    def _validate_jwt(jwt):
+        """Validate the JWT
+
+        Warns of the expiry time of a valid JWT.
+        Returns None if the JWT is invalid/expired.
+        """
+        if not jwt:
+            return None
+
+        try:
+            payload = jwt.split('.')[1]  # header.payload.signature
+            payload += "=" * (4 - len(payload) % 4)  # ensure correct padding
+            data = json.loads(base64.b64decode(payload, validate=True))
+            __log__.debug("JWT token data: %s", data)
+            expiry = datetime.datetime.fromtimestamp(data["exp"])
+        except Exception:
+            __log__.error("Failed to parse provided JWT '%s' - ignoring it", jwt, exc_info=True)
+            return None
+
+        now = datetime.datetime.now()
+        if expiry < now:
+            __log__.error("Provided JWT token expired on %s - ignoring it", expiry)
+            return None
+
+        __log__.warning(
+            "Using a JWT token that will expire on %s (in %s)",
+            expiry,
+            expiry-now
+        )
+        return jwt
 
     def _ensure_output_dirs(self, gear=True, photos=True):
         os.makedirs(self.activity_dir, exist_ok=True)
