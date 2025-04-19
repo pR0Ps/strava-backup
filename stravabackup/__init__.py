@@ -15,6 +15,7 @@ from units import LeafUnit, ComposedUnit
 from units.quantity import Quantity
 
 from stravaweblib import WebClient, FrameType, DataFormat
+from stravalib.exc import AuthError
 
 
 __all__ = ["StravaBackup"]
@@ -101,13 +102,10 @@ class StravaBackup:
     def __init__(self, *, access_token, email, password, jwt, out_dir):
         self.out_dir = out_dir
 
-        # Will attempt to log in using the username/password/jwt
-        self.client = WebClient(
-            access_token=access_token,
-            email=email,
-            password=password,
-            jwt=self._validate_jwt(jwt),
-        )
+        if not access_token:
+            raise ValueError("An access_token is required")
+
+        self.client = self._make_client(access_token, email, password, self._validate_jwt(jwt))
         self._have = self._find_existing_data()
 
     def __enter__(self):
@@ -163,6 +161,31 @@ class StravaBackup:
             expiry-now
         )
         return jwt
+
+    @staticmethod
+    def _make_client(access_token, email, password, jwt):
+        # attempt login via JWT
+        if jwt:
+            try:
+                return WebClient(
+                    access_token=access_token,
+                    jwt=jwt
+                )
+            except AuthError:
+                __log__.error("Failed to login with JWT", exc_info=True)
+
+        if email and password:
+            # Attempt login using the email/password
+            try:
+                return WebClient(
+                    access_token=access_token,
+                    email=email,
+                    password=password,
+                )
+            except AuthError:
+                __log__.error("Failed to login with email + password", exc_info=True)
+
+        raise AuthError("Failed to log into account")
 
     def _ensure_output_dirs(self, gear=True, photos=True):
         os.makedirs(self.activity_dir, exist_ok=True)
