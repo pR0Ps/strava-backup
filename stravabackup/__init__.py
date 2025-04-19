@@ -128,6 +128,10 @@ class StravaBackup:
     def gear_dir(self):
         return os.path.join(self.out_dir, "gear")
 
+    @property
+    def jwt(self):
+        return self.client.jwt
+
     @staticmethod
     def _validate_jwt(jwt):
         """Validate the JWT
@@ -153,7 +157,7 @@ class StravaBackup:
             __log__.error("Provided JWT token expired on %s - ignoring it", expiry)
             return None
 
-        __log__.warning(
+        __log__.info(
             "Using a JWT token that will expire on %s (in %s)",
             expiry,
             expiry-now

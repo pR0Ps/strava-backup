@@ -93,6 +93,14 @@ def main():
                         help="Output debug information (default: %(default)s)")
     args = parser.parse_args()
 
+    # Reduce logspam
+    logging.getLogger("stravalib.model").setLevel(logging.INFO)
+    logging.getLogger("stravalib.attributes").setLevel(logging.ERROR)
+    logging.getLogger("stravaweblib.model").setLevel(logging.INFO)
+    logging.basicConfig(format=LOG_FORMAT,
+                        level=logging.DEBUG if args.debug else
+                              logging.ERROR if args.quiet else logging.INFO)
+
     with _manage_config(args.config) as config:
         client_id = config['api']['client_id']
         client_secret = config['api']['client_secret']
@@ -101,14 +109,6 @@ def main():
         email = config['user']['email']
         password = config['user']['password']
         jwt = config['user'].get('jwt')
-
-        # Reduce logspam
-        logging.getLogger("stravalib.model").setLevel(logging.INFO)
-        logging.getLogger("stravalib.attributes").setLevel(logging.ERROR)
-        logging.getLogger("stravaweblib.model").setLevel(logging.INFO)
-        logging.basicConfig(format=LOG_FORMAT,
-                            level=logging.DEBUG if args.debug else
-                                  logging.ERROR if args.quiet else logging.INFO)
 
         __log__.info("Using the refresh token to get an access token")
         tokens = Client().refresh_access_token(client_id, client_secret, refresh_token)
@@ -119,18 +119,23 @@ def main():
 
         access_token = tokens['access_token']
 
-    if args.dry_run:
-        __log__.info("Would backup '%s' to '%s'", email, output_dir)
-    else:
-        __log__.info("Backing up '%s' to '%s'", email, output_dir)
+        sb = StravaBackup(
+            access_token=access_token,
+            email=email,
+            password=password,
+            jwt=jwt,
+            out_dir=output_dir,
+        )
+        if sb.jwt != jwt:
+            __log__.info("JWT token has changed, will attempt to update the config file")
+            config['user']['jwt'] = sb.jwt
+            config._updated = True
 
-    sb = StravaBackup(
-        access_token=access_token,
-        email=email,
-        password=password,
-        jwt=jwt,
-        out_dir=output_dir,
-    )
+    if args.dry_run:
+        __log__.info("Logged in, would backup '%s' to '%s'", email, output_dir)
+    else:
+        __log__.info("Logged in, backing up '%s' to '%s'", email, output_dir)
+
     return sb.run_backup(
         limit=args.limit,
         metadata=not args.no_meta,
