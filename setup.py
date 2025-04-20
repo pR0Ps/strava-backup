@@ -30,7 +30,7 @@ setup(
     packages=["stravabackup"],
     package_data={"stravabackup": ["strava-backup.conf"]},
     install_requires=[
-        "stravaweblib>=0.0.8,<1.0.0",
+        "stravaweblib>=0.0.9,<1.0.0",
         "stravalib>=0.10.4,<1.0.0",
         "commented-configparser>=2,<3",
     ],
