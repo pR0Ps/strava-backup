@@ -22,11 +22,9 @@ setup(
     license="MPLv2",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3 :: Only",
     ],
-    python_requires=">=3.4",
+    python_requires=">=3.8",
     packages=["stravabackup"],
     package_data={"stravabackup": ["strava-backup.conf"]},
     install_requires=[
