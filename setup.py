@@ -29,6 +29,10 @@ setup(
     python_requires=">=3.4",
     packages=["stravabackup"],
     package_data={"stravabackup": ["strava-backup.conf"]},
-    install_requires=["stravaweblib>=0.0.8,<1.0.0", "stravalib>=0.10.4,<1.0.0"],
+    install_requires=[
+        "stravaweblib>=0.0.8,<1.0.0",
+        "stravalib>=0.10.4,<1.0.0",
+        "commented-configparser>=2,<3",
+    ],
     entry_points={'console_scripts': ["strava-backup=stravabackup.__main__:main"]}
 )

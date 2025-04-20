@@ -36,6 +36,10 @@ In order to back up your data, `strava-backup` can use the following scopes (all
 - `activity:read` ("View data about your activities"): Will read and backup activity data
 - `activity:read_all` ("View data about your private activities"): Will read and backup private activity data
 
+Accessing the activity data requires web scraping which requires logging into the website. This
+requires either a username and password, or a JWT token from a previously-authenticated session.
+Note that JWT tokens expire periodically so providing a username and password is required for
+running the backup on an ongoing basis.
 
 Setup
 -----
