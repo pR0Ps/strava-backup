@@ -142,7 +142,7 @@ class StravaBackup:
 
         try:
             _, payload, _ = jwt.split('.')  # header.payload.signature
-            payload += "=" * (4 - len(payload) % 4)  # ensure correct padding
+            payload += "=" * (-len(payload) % 4) # ensure correct padding
             data = json.loads(base64.b64decode(payload, validate=True))
             __log__.debug("JWT token data: %s", data)
             expiry = datetime.datetime.fromtimestamp(data["exp"])
