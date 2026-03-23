@@ -21,8 +21,8 @@ from stravalib.exc import AuthError
 __all__ = ["StravaBackup"]
 __log__ = logging.getLogger(__name__)
 
-TIME_FMT = "%Y-%m-%dT%H:%m:%SZ"
-TIME_FMT_FILE = "%Y-%m-%dT%H-%m-%SZ"
+TIME_FMT = "%Y-%m-%dT%H:%M:%SZ"
+TIME_FMT_FILE = "%Y-%m-%dT%H-%M-%SZ"
 
 META_EXTENSION = "meta.json"
 ACTIVITY_FILENAME = "{start}_{id}.{ext}"
